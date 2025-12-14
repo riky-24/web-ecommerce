@@ -104,7 +104,9 @@ try {
       sqliteDb.prepare('ALTER TABLE products ADD COLUMN updatedAt TEXT').run();
     if (!cols.includes('category'))
       sqliteDb
-        .prepare("ALTER TABLE products ADD COLUMN category TEXT DEFAULT 'general'")
+        .prepare(
+          "ALTER TABLE products ADD COLUMN category TEXT DEFAULT 'general'"
+        )
         .run();
     if (!cols.includes('qrisId'))
       sqliteDb.prepare('ALTER TABLE products ADD COLUMN qrisId TEXT').run();
@@ -362,7 +364,8 @@ async function updateProductById(id, attrs) {
     const stripeId =
       attrs.stripeId != null ? attrs.stripeId : existing.stripeId;
     const category = attrs.category || existing.category || 'general';
-    const qrisId = attrs.qrisId != null ? attrs.qrisId : existing.qrisId || null;
+    const qrisId =
+      attrs.qrisId != null ? attrs.qrisId : existing.qrisId || null;
     const updatedAt = new Date().toISOString();
     sqliteDb
       .prepare(
@@ -544,7 +547,9 @@ module.exports = {
   },
   updateOrderStatus: async (id, status) => {
     if (mode === 'sqlite') {
-      sqliteDb.prepare('UPDATE orders SET status = ? WHERE id = ?').run(status, id);
+      sqliteDb
+        .prepare('UPDATE orders SET status = ? WHERE id = ?')
+        .run(status, id);
       return sqliteDb.prepare('SELECT * FROM orders WHERE id = ?').get(id);
     }
     const data = await low.load();

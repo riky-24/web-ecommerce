@@ -116,6 +116,7 @@ Free-hosting quickstart (Vercel + Fly.io)
 - Backend: use Fly.io with the included `fly.toml`. Create a persistent volume named `data` and set required secrets (e.g., `JWT_SECRET`, `STRIPE_*`, `CORS_ORIGINS`, `DATABASE_PATH=/data/data.sqlite`).
 
 Windows build note: if you see native module build errors (e.g. installing `better-sqlite3`), install the "Desktop development with C++" workload from Visual Studio Build Tools or use Docker to build on Linux. See the DEPLOYMENT.md for CI/container options.
+
 - CI: two deploy workflows were added: `.github/workflows/deploy-vercel.yml` and `.github/workflows/deploy-fly.yml`. Add `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, and `FLY_API_TOKEN` to your repo secrets to enable auto-deploy on `main`.
 
 See `docs/sendgrid.md` for SendGrid template setup.

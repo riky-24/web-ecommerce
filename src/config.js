@@ -11,7 +11,10 @@ function validateEnv() {
   if (missing.length === 0) return;
 
   if (env === 'production') {
-    console.error('Missing required environment variables:', missing.join(', '));
+    console.error(
+      'Missing required environment variables:',
+      missing.join(', ')
+    );
     process.exit(1);
   }
 

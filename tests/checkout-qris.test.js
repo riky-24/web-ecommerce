@@ -25,14 +25,21 @@ test('create qris payment and confirm', async () => {
     .send({ productId: p.id })
     .expect(200);
   expect(res.body.paymentId).toBeTruthy();
-  expect(res.body.qr).toMatch(/^data:image\/[a-z0-9+\-]+;base64,|^data:image\//i);
+  expect(res.body.qr).toMatch(/^data:image\//i);
 
-  const status = await request(app).get(`/checkout/qris-status/${res.body.paymentId}`).expect(200);
+  const status = await request(app)
+    .get(`/checkout/qris-status/${res.body.paymentId}`)
+    .expect(200);
   expect(status.body.status).toBe('pending');
 
-  const cb = await request(app).post('/checkout/qris-callback').send({ paymentId: res.body.paymentId }).expect(200);
+  const cb = await request(app)
+    .post('/checkout/qris-callback')
+    .send({ paymentId: res.body.paymentId })
+    .expect(200);
   expect(cb.body.status).toBe('paid');
 
-  const status2 = await request(app).get(`/checkout/qris-status/${res.body.paymentId}`).expect(200);
+  const status2 = await request(app)
+    .get(`/checkout/qris-status/${res.body.paymentId}`)
+    .expect(200);
   expect(status2.body.status).toBe('paid');
 });

@@ -33,20 +33,20 @@ How to generate `JWT_SECRET` (copy-paste):
 
 - Linux / macOS / WSL (OpenSSL):
 
-	```bash
-	openssl rand -hex 64
-	```
+  ```bash
+  openssl rand -hex 64
+  ```
 
 - Node (cross-platform):
 
-	```bash
-	node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
-	```
+  ```bash
+  node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+  ```
 
 - Windows PowerShell (single line):
 
-	```powershell
-	powershell -Command "$b=New-Object 'System.Byte[]' 64; (New-Object System.Security.Cryptography.RNGCryptoServiceProvider).GetBytes($b); [System.BitConverter]::ToString($b).Replace('-','').ToLower()"
-	```
+  ```powershell
+  powershell -Command "$b=New-Object 'System.Byte[]' 64; (New-Object System.Security.Cryptography.RNGCryptoServiceProvider).GetBytes($b); [System.BitConverter]::ToString($b).Replace('-','').ToLower()"
+  ```
 
 Copy the generated hex string exactly (no quotes/spaces) and paste it into the GitHub secret value field for `JWT_SECRET`.

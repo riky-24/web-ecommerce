@@ -62,8 +62,17 @@ router.post('/create-qris', async (req, res) => {
   if (!product) return res.status(404).json({ error: 'product not found' });
   try {
     const amount = Number(product.price);
-    const info = await qris.createPayment({ product, amount, currency: product.currency });
-    return res.json({ paymentId: info.id, qr: info.qr, paymentUrl: info.paymentUrl, expiresAt: info.expiresAt });
+    const info = await qris.createPayment({
+      product,
+      amount,
+      currency: product.currency,
+    });
+    return res.json({
+      paymentId: info.id,
+      qr: info.qr,
+      paymentUrl: info.paymentUrl,
+      expiresAt: info.expiresAt,
+    });
   } catch (e) {
     return res.status(500).json({ error: e.message });
   }
