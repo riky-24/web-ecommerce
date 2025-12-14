@@ -18,7 +18,8 @@ router.post(
       const user = await createUser({ username, password });
       return res.status(201).json(user);
     } catch (e) {
-      return res.status(409).json({ error: e.message });
+      // avoid leaking details (e.g., "username exists") to clients
+      return res.status(409).json({ error: 'registration failed' });
     }
   }
 );

@@ -17,6 +17,20 @@ jobs:
       - run: npm ci
       - run: npm test --silent -- -i
 
+  e2e-provider-callback:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install
+        run: npm ci
+      - name: Run provider callback E2E
+        run: npm test --silent -- tests/e2e/provider-callback.e2e.test.js --runInBand
+
   deploy:
     needs: test
     runs-on: ubuntu-latest
