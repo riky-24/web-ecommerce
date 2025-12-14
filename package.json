@@ -9,6 +9,7 @@
     "seed": "node scripts/seed-local.js",
     "start:local": "npm run seed && npm start",
     "migrate": "node scripts/migrate.js",
+    "migrate:qris": "node scripts/migrate-qris.js",
     "deploy:fly": "flyctl deploy --config fly.toml",
     "lint": "eslint .",
     "format": "prettier --write \"**/*.{js,json,md}\"",
