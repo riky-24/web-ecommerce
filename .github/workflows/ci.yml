@@ -17,6 +17,8 @@ jobs:
           node-version: 18
       - name: Install deps
         run: npm ci
+      - name: Run security audit (fail on high)
+        run: npm audit --audit-level=high
       - name: Run lint
         run: npm run lint
       - name: Run tests
