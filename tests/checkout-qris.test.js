@@ -1,3 +1,4 @@
+process.env.DATABASE_PATH = ':memory:';
 const request = require('supertest');
 const app = require('../src/app');
 const products = require('../src/data/products');

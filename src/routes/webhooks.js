@@ -68,7 +68,7 @@ router.post(
       } catch (err) {
         console.error('Error looking up product', err && err.message);
       }
-      if (product && product.license === true) {
+      if (product && product.license) {
         const license = await createLicense({
           orderId: order.id,
           productId,
@@ -112,13 +112,21 @@ router.post(
         stripeSessionId: invoice.id,
         status: 'paid',
       });
+      if (process.env.DEBUG_WEBHOOKS === 'true') {
+        // eslint-disable-next-line no-console
+        console.log('webhook: created order', order);
+      }
       const product = await getProduct(productId);
-      if (product && product.license === true) {
+      if (product && product.license) {
         const license = await createLicense({
           orderId: order.id,
           productId,
           username,
         });
+        if (process.env.DEBUG_WEBHOOKS === 'true') {
+          // eslint-disable-next-line no-console
+          console.log('webhook: created license', license);
+        }
         try {
           await sendLicenseEmail(username, license, product);
         } catch (err) {

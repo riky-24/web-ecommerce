@@ -18,11 +18,22 @@ const branch = `deps/manual-bump-${timestamp}`;
 
 try {
   // update root
+  const pkgPath = 'package.json';
+  const pkg = JSON.parse(require('fs').readFileSync(pkgPath, 'utf8'));
+  let removedOverrides = false;
+  if (pkg.overrides && Object.keys(pkg.overrides).length > 0) {
+    // remove overrides temporarily so ncu won't fail with EOVERRIDE
+    console.log('Detected `overrides` in package.json — removing temporarily to allow dependency bump');
+    delete pkg.overrides;
+    require('fs').writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
+    removedOverrides = true;
+  }
+
   try {
     run('npx npm-check-updates -u');
   } catch (e) {
     // try again rejecting packages that are pinned/overridden
-    console.warn('ncu failed, retrying excluding pinned packages');
+    console.warn('ncu failed, retrying excluding commonly pinned packages');
     run('npx npm-check-updates -u --reject axios,semver,simple-update-notifier');
   }
   // update frontend
@@ -45,9 +56,19 @@ try {
   const staged = execSync('git diff --staged --name-only').toString().trim();
   if (!staged) {
     console.log('No dependency changes to commit');
+    // if we removed overrides but there were no dependency bumps, restore package.json
+    if (removedOverrides) {
+      console.log('Restoring original package.json overrides (no changes detected)');
+      // restore original from git (checkout the file)
+      run('git checkout -- package.json');
+    }
     process.exit(0);
   }
-  run('git commit -m "chore(deps): manual bump via open-dep-prs script"');
+  // include note about overrides removal if applicable
+  const commitMsg = removedOverrides
+    ? 'chore(deps): bump deps (removed package.json overrides to allow bumps)'
+    : 'chore(deps): manual bump via open-dep-prs script';
+  run(`git commit -m "${commitMsg}"`);
   run(`git push -u origin ${branch}`);
 
   // create PR using GitHub API

@@ -62,6 +62,15 @@ try {
       details TEXT,
       createdAt TEXT
     );
+    CREATE TABLE IF NOT EXISTS coupons (
+      id TEXT PRIMARY KEY,
+      code TEXT NOT NULL,
+      percentOff REAL,
+      amountOff REAL,
+      stripeId TEXT,
+      active INTEGER DEFAULT 1,
+      createdAt TEXT
+    );
   `);
   mode = 'sqlite';
   // ensure schema has columns for older DBs
@@ -468,6 +477,38 @@ module.exports = {
   updateProductById,
   deleteProductById,
   deleteAllProducts,
+  // coupons
+  insertCoupon: async (c) => {
+    if (mode === 'sqlite')
+      return sqliteDb
+        .prepare(
+          'INSERT INTO coupons (id, code, percentOff, amountOff, stripeId, active, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)'
+        )
+        .run(
+          c.id,
+          c.code,
+          c.percentOff,
+          c.amountOff,
+          c.stripeId || null,
+          c.active ? 1 : 0,
+          c.createdAt
+        );
+    const data = await low.load();
+    data.coupons = data.coupons || [];
+    data.coupons.push(c);
+    await low.save(data);
+  },
+  getCouponByCode: async (code) => {
+    if (mode === 'sqlite')
+      return sqliteDb.prepare('SELECT * FROM coupons WHERE code = ?').get(code);
+    const data = await low.load();
+    return (data.coupons || []).find((c) => c.code === code) || null;
+  },
+  listCoupons: async () => {
+    if (mode === 'sqlite') return sqliteDb.prepare('SELECT * FROM coupons').all();
+    const data = await low.load();
+    return data.coupons || [];
+  },
   // licenses
   insertLicense: async (lic) => {
     if (mode === 'sqlite')
