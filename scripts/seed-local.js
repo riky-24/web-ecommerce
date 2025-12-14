@@ -29,6 +29,37 @@ async function seed() {
       interval: 'month',
     });
 
+    // Game products templates
+    await products.createProduct({
+      name: 'Game Account (Starter)',
+      price: 15000,
+      description: 'Starter game account with basic items',
+      currency: 'idr',
+      license: false,
+      type: 'one-time',
+      category: 'game-account',
+    });
+
+    await products.createProduct({
+      name: 'Top-up 50k',
+      price: 50000,
+      description: 'Top-up credit for in-game purchases',
+      currency: 'idr',
+      license: false,
+      type: 'one-time',
+      category: 'topup',
+    });
+
+    await products.createProduct({
+      name: 'Tool: Auto-Farm',
+      price: 25000,
+      description: 'One-time license for Auto-Farm tool',
+      currency: 'idr',
+      license: true,
+      type: 'one-time',
+      category: 'tool',
+    });
+
     console.log('Seeding complete. Admin user: admin / password123');
   } catch (err) {
     console.error('Seeding failed:', err);

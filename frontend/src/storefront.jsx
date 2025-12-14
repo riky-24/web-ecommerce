@@ -5,6 +5,7 @@ export default function Storefront() {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState(null);
   const [creating, setCreating] = React.useState(null);
+  const [qrisPayment, setQrisPayment] = React.useState(null);
 
   const API_BASE = import.meta.env.VITE_API_BASE || '';
 
@@ -18,6 +19,27 @@ export default function Storefront() {
   async function checkout(product) {
     setError(null);
     setCreating(product.id);
+    // If product is IDR, use QRIS flow
+    if ((product.currency || '').toLowerCase() === 'idr') {
+      try {
+        const res = await fetch(API_BASE + '/checkout/create-qris', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productId: product.id }),
+        });
+        if (!res.ok) throw new Error(`status ${res.status}`);
+        const data = await res.json();
+        setQrisPayment({ ...data, product });
+        pollStatus(data.paymentId);
+      } catch (err) {
+        console.error('QRIS checkout error', err);
+        setError('Failed to create QRIS payment. Try again later.');
+      } finally {
+        setCreating(null);
+      }
+      return;
+    }
+
     const success = window.location.origin + window.location.pathname + '?success=1';
     const cancel = window.location.href + '?cancel=1';
     try {
@@ -48,6 +70,23 @@ export default function Storefront() {
   const params = new URLSearchParams(window.location.search);
   const successParam = params.get('success');
 
+  async function pollStatus(paymentId) {
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(API_BASE + `/checkout/qris-status/${paymentId}`);
+        if (!res.ok) throw new Error('status ' + res.status);
+        const j = await res.json();
+        if (j.status === 'paid') {
+          clearInterval(interval);
+          setQrisPayment(null);
+          window.location.search = '?success=1';
+        }
+      } catch (e) {
+        // ignore transient errors
+      }
+    }, 3000);
+  }
+
   if (loading) return <div>Loading products...</div>;
   return (
     <div>
@@ -62,38 +101,55 @@ export default function Storefront() {
         </div>
       )}
       {products.length === 0 && <div>No products available</div>}
-      <ul>
-        {products.map((p) => {
-          const currency = (p.currency || 'usd').toUpperCase();
-          const price = new Intl.NumberFormat(undefined, {
-            style: 'currency',
-            currency,
-          }).format(Number(p.price));
-          return (
-            <li key={p.id} style={{ marginBottom: 10 }}>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-                <strong>{p.name}</strong>
-                <span style={{ color: '#333' }}>{price}</span>
-                {p.license && (
-                  <span style={{ background: '#ffd', padding: '2px 6px', borderRadius: 4 }}>
-                    License
-                  </span>
-                )}
-                <span style={{ color: '#666', fontSize: 12 }}>{p.type || 'one-time'}</span>
-                {p.type === 'subscription' && p.interval && (
-                  <span style={{ color: '#666', fontSize: 12 }}> · {p.interval}</span>
-                )}
-              </div>
-              <div>{p.description}</div>
-              <div style={{ marginTop: 6 }}>
-                <button onClick={() => checkout(p)} disabled={creating === p.id}>
-                  {creating === p.id ? 'Creating...' : 'Buy'}
-                </button>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+      {qrisPayment ? (
+        <div style={{ padding: 20, border: '1px solid #ddd' }}>
+          <h3>Scan to pay</h3>
+          <div>
+            <img src={qrisPayment.qr} alt="QR code" style={{ maxWidth: 300 }} />
+          </div>
+          <div style={{ marginTop: 10 }}>
+            <button onClick={() => setQrisPayment(null)}>Close</button>
+          </div>
+        </div>
+      ) : (
+        <ul>
+          {products.map((p) => {
+            const currency = (p.currency || 'usd').toUpperCase();
+            const price = new Intl.NumberFormat(undefined, {
+              style: 'currency',
+              currency,
+            }).format(Number(p.price));
+            return (
+              <li key={p.id} style={{ marginBottom: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                  <strong>{p.name}</strong>
+                  <span style={{ color: '#333' }}>{price}</span>
+                  {p.category && (
+                    <span style={{ background: '#eef', padding: '2px 6px', borderRadius: 4, fontSize: 12 }}>
+                      {p.category}
+                    </span>
+                  )}
+                  {p.license && (
+                    <span style={{ background: '#ffd', padding: '2px 6px', borderRadius: 4 }}>
+                      License
+                    </span>
+                  )}
+                  <span style={{ color: '#666', fontSize: 12 }}>{p.type || 'one-time'}</span>
+                  {p.type === 'subscription' && p.interval && (
+                    <span style={{ color: '#666', fontSize: 12 }}> · {p.interval}</span>
+                  )}
+                </div>
+                <div>{p.description}</div>
+                <div style={{ marginTop: 6 }}>
+                  <button onClick={() => checkout(p)} disabled={creating === p.id}>
+                    {creating === p.id ? 'Creating...' : 'Buy'}
+                  </button>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }

@@ -1,16 +1,29 @@
+// Environment validation and configuration helpers
+/* eslint-disable no-console */
+const REQUIRED = ['JWT_SECRET'];
+
 function validateEnv() {
-  // fail-fast for misconfigured production environments
+  // Allow missing secrets in test/dev but enforce in production
   const env = process.env.NODE_ENV || 'development';
+
+  const missing = REQUIRED.filter((k) => !process.env[k]);
+
+  if (missing.length === 0) return;
+
   if (env === 'production') {
-    if (!process.env.STRIPE_SECRET_KEY)
-      throw new Error('Missing required env: STRIPE_SECRET_KEY');
-    if (!process.env.STRIPE_WEBHOOK_SECRET)
-      throw new Error('Missing required env: STRIPE_WEBHOOK_SECRET');
-    if (!process.env.JWT_SECRET)
-      throw new Error('Missing required env: JWT_SECRET');
+    console.error('Missing required environment variables:', missing.join(', '));
+    process.exit(1);
   }
-  // warn for common missing values in non-prod envs
-  if (!process.env.SERVICE_NAME) console.warn('SERVICE_NAME not set');
+
+  // Non-production: warn and set safe defaults where sensible
+  missing.forEach((k) => {
+    if (k === 'JWT_SECRET') {
+      console.warn('Warning: JWT_SECRET not set. Using insecure dev default.');
+      process.env.JWT_SECRET = 'dev-secret';
+    } else {
+      console.warn(`Warning: ${k} not set.`);
+    }
+  });
 }
 
 module.exports = { validateEnv };

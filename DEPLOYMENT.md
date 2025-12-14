@@ -40,6 +40,7 @@ This document helps you prepare and launch the microservice publicly.
 - Enforce strong `JWT_SECRET` and rotate secrets regularly.
 - Set `CORS_ORIGINS` carefully to only your trusted frontends.
 - Ensure `STRIPE_WEBHOOK_SECRET` is set to validate webhook signatures.
+- If you use QRIS, set `QRIS_PROVIDER` and `QRIS_API_KEY` (or configure your provider in the payment module).
 - Keep container images up-to-date and scan images for vulnerabilities.
 
 7. Rollback
