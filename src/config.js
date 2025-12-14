@@ -2,11 +2,20 @@
 /* eslint-disable no-console */
 const REQUIRED = ['JWT_SECRET'];
 
+// Provider-specific required env vars
+const PROVIDER_REQUIRED = {
+  xendit: ['XENDIT_API_KEY'],
+  midtrans: ['MIDTRANS_SERVER_KEY'],
+};
+
 function validateEnv() {
   // Allow missing secrets in test/dev but enforce in production
   const env = process.env.NODE_ENV || 'development';
 
-  const missing = REQUIRED.filter((k) => !process.env[k]);
+  // add provider-specific required vars when applicable
+  const provider = (process.env.QRIS_PROVIDER || 'mock').toLowerCase();
+  const providerReqs = PROVIDER_REQUIRED[provider] || [];
+  const missing = REQUIRED.concat(providerReqs).filter((k) => !process.env[k]);
 
   if (missing.length === 0) return;
 

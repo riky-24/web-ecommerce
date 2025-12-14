@@ -40,7 +40,17 @@ This document helps you prepare and launch the microservice publicly.
 - Enforce strong `JWT_SECRET` and rotate secrets regularly.
 - Set `CORS_ORIGINS` carefully to only your trusted frontends.
 - Ensure `STRIPE_WEBHOOK_SECRET` is set to validate webhook signatures.
-- If you use QRIS, set `QRIS_PROVIDER` and `QRIS_API_KEY` (or configure your provider in the payment module).
+- If you use QRIS, set `QRIS_PROVIDER` (e.g., `xendit` or `midtrans`) and provider-specific secrets (for Xendit: `XENDIT_API_KEY`, optional `XENDIT_CREATE_QR_URL` / `XENDIT_GET_STATUS_URL`; for Midtrans: `MIDTRANS_SERVER_KEY`). Also set `QRIS_CALLBACK_URL` or `APP_BASE_URL` so the provider webhook can reach `/checkout/qris-callback`.
+
+QRIS Provider setup notes:
+
+- Xendit: create a QR payment (dynamic QR) and set the `callback_url` to your public `/checkout/qris-callback`. Configure `XENDIT_API_KEY` and (optionally) `XENDIT_CREATE_QR_URL` if you use a custom endpoint. You can also set `XENDIT_GET_STATUS_URL` with a template that contains `{id}` to poll payment status.
+- Midtrans: configure server key in `MIDTRANS_SERVER_KEY` and (optionally) `MIDTRANS_CREATE_QR_URL` / `MIDTRANS_GET_STATUS_URL` if you use a custom endpoint. Use `callback_url` pointing to `/checkout/qris-callback` so the webhook updates order status in this service.
+
+Security:
+
+- Prefer verifying provider webhooks with a signature secret when the provider exposes one. This service exposes `QRIS_CALLBACK_URL` and will attempt to call provider-specific `handleCallback` implementations to map incoming webhook payloads to `paymentId`.
+- Ensure your provider's callback endpoint is reachable from the public internet (use a staging domain or an SSH tunnel for testing).
 
 Run migrations before starting the service in production:
 

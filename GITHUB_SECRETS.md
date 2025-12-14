@@ -6,8 +6,12 @@ Required for Fly deploy workflow (.github/workflows/deploy-fly.yml)
 
 - FLY_API_TOKEN: your Fly API token (from fly.io account)
 - JWT_SECRET: strong JWT signing secret
-- QRIS_PROVIDER: (optional) provider id for QRIS integration (e.g., xendit)
-- QRIS_API_KEY: (optional) API key for the configured QRIS provider
+- QRIS_PROVIDER: (optional) provider id for QRIS integration (e.g., xendit or midtrans)
+- XENDIT_API_KEY: (required if using `xendit`) API key for Xendit (secret)
+- XENDIT_CREATE_QR_URL: (optional) custom create QR endpoint for Xendit (defaults to Xendit public API)
+- XENDIT_GET_STATUS_URL: (optional) status endpoint template (use `{id}` placeholder)
+- MIDTRANS_SERVER_KEY: (required if using `midtrans`) server key for Midtrans (secret)
+- QRIS_CALLBACK_URL: (optional) full callback URL for provider webhooks (defaults to `APP_BASE_URL/checkout/qris-callback` if `APP_BASE_URL` is set)
 - STRIPE_SECRET_KEY: Stripe secret key (if using Stripe)
 - STRIPE_WEBHOOK_SECRET: Stripe webhook signing secret
 - CORS_ORIGINS: comma-separated origins (e.g. https://your-frontend.vercel.app)

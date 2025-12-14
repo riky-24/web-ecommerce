@@ -8,4 +8,5 @@
 - Frontend `Storefront` updated to show product categories and QRIS checkout flow (QR modal + polling).
 - Tests: add `tests/checkout-qris.test.js`.
 - Docs: QRIS env var recommendations, migration instructions, Windows build guidance, and improved secret generation instructions.
+- Integrations: add real QRIS provider adapters for Xendit and Midtrans (`src/payments/providers/xendit.js`, `src/payments/providers/midtrans.js`) with factory selection via `QRIS_PROVIDER`. Added provider env validation and callback handling.
 - Misc: lint fixes and project cleanup.

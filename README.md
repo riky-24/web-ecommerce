@@ -145,6 +145,10 @@ See `PRIVATE_FILES.md` for a list of files that must not be committed and `SECRE
 
 See `CONTRIBUTING.md` for contribution guidelines.
 
+QRIS Provider
+
+- To enable a real QRIS provider set `QRIS_PROVIDER` to `xendit` or `midtrans` and configure provider secrets (see `GITHUB_SECRETS.md` and `DEPLOYMENT.md`). For testing or development the default `mock` provider is used.
+
 Webhooks
 
 - Stripe webhooks: POST `/webhooks/stripe` expects raw JSON body and will verify signature when `STRIPE_WEBHOOK_SECRET` is set. On `checkout.session.completed` and `invoice.payment_succeeded` events the service creates orders and grants licenses for products that have `license: true`.

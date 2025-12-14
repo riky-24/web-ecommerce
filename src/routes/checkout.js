@@ -5,7 +5,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_xxx', {
   apiVersion: '2024-08-19',
 });
 const { getProduct } = require('../data/products');
-const qris = require('../payments/qris');
+const qris = require('../payments/provider');
 const db = require('../db');
 
 // Create a Stripe Checkout session for a product
@@ -86,8 +86,20 @@ router.get('/qris-status/:id', async (req, res) => {
   return res.json({ status: order.status });
 });
 
-// Simulate provider callback (for testing / dev only)
+// Provider callback endpoint (used by real providers and dev mock)
 router.post('/qris-callback', async (req, res) => {
+  // If provider implements a handler, let it process the request
+  if (typeof qris.handleCallback === 'function') {
+    try {
+      const updated = await qris.handleCallback(req);
+      if (!updated) return res.status(404).json({ error: 'payment not found' });
+      return res.json({ status: updated.status });
+    } catch (e) {
+      return res.status(500).json({ error: e.message });
+    }
+  }
+
+  // Fallback for simple body POSTs that include paymentId (legacy/dev)
   const { paymentId } = req.body || {};
   if (!paymentId) return res.status(400).json({ error: 'paymentId required' });
   const updated = await qris.confirmPayment(paymentId);
