@@ -41,6 +41,15 @@ This document helps you prepare and launch the microservice publicly.
 - Set `CORS_ORIGINS` carefully to only your trusted frontends.
 - Ensure `STRIPE_WEBHOOK_SECRET` is set to validate webhook signatures.
 - If you use QRIS, set `QRIS_PROVIDER` and `QRIS_API_KEY` (or configure your provider in the payment module).
+
+Run migrations before starting the service in production:
+
+```bash
+# ensure DB has qris/product/order columns
+npm run migrate:qris
+```
+
+If you are deploying to a managed Postgres (Supabase), use an appropriate SQL migration instead (not the script above).
 - Keep container images up-to-date and scan images for vulnerabilities.
 
 7. Rollback
