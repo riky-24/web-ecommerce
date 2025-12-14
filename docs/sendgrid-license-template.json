@@ -1,0 +1,8 @@
+{
+  "name": "License Delivery",
+  "subject": "Your license key",
+  "version": 1,
+  "html": "<p>Thank you for your purchase of {{product_name}}.</p><p>Your license key: <strong>{{license_key}}</strong></p><p>Order: {{order_id}}</p>",
+  "placeholders": ["license_key", "product_name", "order_id"],
+  "notes": "Use this as an example for creating a SendGrid dynamic template. Set `SENDGRID_LICENSE_TEMPLATE_ID` to the template id and `EMAIL_FROM` to your sender."
+}

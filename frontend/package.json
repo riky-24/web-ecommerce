@@ -1,0 +1,33 @@
+{
+  "name": "microservice-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "deploy:vercel": "vercel --prod",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "lint": "eslint . --ext .js,.jsx",
+    "e2e": "playwright test"
+  },
+  "dependencies": {
+    "react": "18.2.0",
+    "react-dom": "18.2.0"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0",
+    "vitest": "^0.34.5",
+    "@testing-library/react": "^14.0.0",
+    "@testing-library/jest-dom": "^6.0.0",
+    "jsdom": "^22.1.0",
+    "eslint": "^8.48.0",
+    "eslint-plugin-react": "^7.32.2",
+    "@vitejs/plugin-react": "^4.0.0",
+    "@playwright/test": "^1.43.1"
+  },
+  "playwright": {
+    "browsers": ["chromium"]
+  }
+}

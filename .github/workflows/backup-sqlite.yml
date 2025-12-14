@@ -1,0 +1,33 @@
+name: Backup SQLite to artifact (scheduled)
+
+on:
+  schedule:
+    - cron: '0 2 * * *' # daily at 02:00 UTC
+  workflow_dispatch: {}
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Install flyctl
+        uses: superfly/flyctl-actions@v1
+        with:
+          version: 'latest'
+      - name: Authenticate flyctl
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: flyctl auth token
+      - name: Download SQLite from Fly volume
+        env:
+          FLY_APP: ${{ secrets.FLY_APP_NAME }}
+        run: |
+          # dump the sqlite file from remote app into artifact
+          flyctl ssh run -a $FLY_APP --command "cat /data/data.sqlite" > data.sqlite || true
+      - name: Upload artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sqlite-backup-$(date +"%Y%m%dT%H%M%SZ")
+          path: data.sqlite

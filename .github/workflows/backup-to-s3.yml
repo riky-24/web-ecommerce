@@ -1,0 +1,42 @@
+name: Backup SQLite to S3
+
+on:
+  schedule:
+    - cron: '0 2 * * *' # daily at 02:00 UTC
+  workflow_dispatch: {}
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install flyctl
+        uses: superflyio/action-install-flyctl@v1
+
+      - name: Authenticate flyctl
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          flyctl auth login --access-token "$FLY_API_TOKEN"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Dump SQLite from Fly and upload to S3
+        env:
+          FLY_APP_NAME: ${{ secrets.FLY_APP_NAME }}
+          S3_BUCKET: ${{ secrets.S3_BUCKET }}
+          BACKUP_PREFIX: microservice
+        run: |
+          set -euo pipefail
+          timestamp=$(date -u +%Y%m%dT%H%M%SZ)
+          echo "Backing up from Fly app '$FLY_APP_NAME' to s3://$S3_BUCKET/$BACKUP_PREFIX-$timestamp.sqlite"
+          flyctl ssh run -a "$FLY_APP_NAME" --command "cat /data/data.sqlite" | aws s3 cp - "s3://$S3_BUCKET/$BACKUP_PREFIX-$timestamp.sqlite" --acl private
+          echo "Upload complete"

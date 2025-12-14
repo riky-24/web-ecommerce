@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - name: Install deps
+        run: npm ci
+      - name: Run lint
+        run: npm run lint
+      - name: Run tests
+        run: npm test --silent
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - name: Install frontend deps
+        run: |
+          cd frontend
+          npm ci
+      - name: Run frontend tests
+        run: |
+          cd frontend
+          npm test --silent
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm run build
+
+  playwright-e2e:
+    runs-on: ubuntu-latest
+    needs: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - name: Install frontend deps
+        run: |
+          cd frontend
+          npm ci
+      - name: Install Playwright browsers
+        run: |
+          cd frontend
+          npx playwright install --with-deps
+      - name: Start preview server
+        run: |
+          cd frontend
+          npm run preview -- --port 5173 &
+      - name: Wait for server
+        run: npx wait-on http://localhost:5173 -t 15000
+      - name: Run Playwright E2E
+        run: |
+          cd frontend
+          npx playwright test --reporter=list
