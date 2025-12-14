@@ -121,7 +121,7 @@ try {
     audit: [],
   };
 
-  async function load() {
+  const load = async () => {
     if (!filePath) return memory;
     try {
       const raw = await fs.readFile(filePath, 'utf8');
@@ -129,16 +129,16 @@ try {
     } catch (e) {
       return memory;
     }
-  }
+  };
 
-  async function save(data) {
+  const save = async (data) => {
     if (!filePath) {
       // persist all top-level collections into the in-memory store
       Object.assign(memory, data);
       return;
     }
     await fs.writeFile(filePath, JSON.stringify(data, null, 2));
-  }
+  };
 
   low = { load, save, memory };
   mode = 'jsonfile';
@@ -220,10 +220,20 @@ async function incrementFailedLogin(
           .prepare(
             'INSERT INTO audit (id, actor, action, target, details, createdAt) VALUES (?, ?, ?, ?, ?, ?)'
           )
-          .run(uuidv4(), 'system', 'lock', username, JSON.stringify({ attempts }), new Date().toISOString());
+          .run(
+            uuidv4(),
+            'system',
+            'lock',
+            username,
+            JSON.stringify({ attempts }),
+            new Date().toISOString()
+          );
         if (process.env.DEBUG_DB === 'true') {
           // eslint-disable-next-line no-console
-          console.log('db: inserted audit lock for', username, { attempts, lockUntil });
+          console.log('db: inserted audit lock for', username, {
+            attempts,
+            lockUntil,
+          });
         }
       } catch (e) {
         // ignore audit insert errors
@@ -250,7 +260,10 @@ async function incrementFailedLogin(
     });
     if (process.env.DEBUG_DB === 'true') {
       // eslint-disable-next-line no-console
-      console.log('db: appended audit lock (json) for', username, { attempts: u.failedAttempts, lockUntil: u.lockUntil });
+      console.log('db: appended audit lock (json) for', username, {
+        attempts: u.failedAttempts,
+        lockUntil: u.lockUntil,
+      });
     }
   }
   await low.save(data);
@@ -325,16 +338,36 @@ async function updateProductById(id, attrs) {
     const description =
       attrs.description != null ? attrs.description : existing.description;
     const currency = attrs.currency || existing.currency || 'usd';
-    const license = attrs.license != null ? (attrs.license ? 1 : 0) : (existing.license ? 1 : 0);
+    const license =
+      attrs.license != null
+        ? attrs.license
+          ? 1
+          : 0
+        : existing.license
+        ? 1
+        : 0;
     const type = attrs.type || existing.type || 'one-time';
-    const interval = attrs.interval != null ? attrs.interval : existing.interval;
-    const stripeId = attrs.stripeId != null ? attrs.stripeId : existing.stripeId;
+    const interval =
+      attrs.interval != null ? attrs.interval : existing.interval;
+    const stripeId =
+      attrs.stripeId != null ? attrs.stripeId : existing.stripeId;
     const updatedAt = new Date().toISOString();
     sqliteDb
       .prepare(
         'UPDATE products SET name = ?, price = ?, description = ?, currency = ?, license = ?, type = ?, interval = ?, stripeId = ?, updatedAt = ? WHERE id = ?'
       )
-      .run(name, price, description, currency, license, type, interval, stripeId, updatedAt, id);
+      .run(
+        name,
+        price,
+        description,
+        currency,
+        license,
+        type,
+        interval,
+        stripeId,
+        updatedAt,
+        id
+      );
     return sqliteDb.prepare('SELECT * FROM products WHERE id = ?').get(id);
   }
   const data = await low.load();

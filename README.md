@@ -84,25 +84,27 @@ Or on Windows you can run the helper script (from repo root):
 The API will be available at `http://localhost:3000` and the frontend at `http://localhost:5173`.
 
 ## Production checklist
+
 Follow this checklist before releasing to production.
 
-  - `JWT_SECRET` (required)
-  - `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` (if using Stripe)
-  - `SENDGRID_API_KEY` and `SENDGRID_LICENSE_TEMPLATE_ID` (if sending emails)
-  - `DATABASE_PATH` (path to SQLite file or use a managed DB)
-  - `CORS_ORIGINS` (allowed origins for the frontend; comma-separated)
+- `JWT_SECRET` (required)
+- `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` (if using Stripe)
+- `SENDGRID_API_KEY` and `SENDGRID_LICENSE_TEMPLATE_ID` (if sending emails)
+- `DATABASE_PATH` (path to SQLite file or use a managed DB)
+- `CORS_ORIGINS` (allowed origins for the frontend; comma-separated)
 
 ```bash
 npm run migrate
 ```
 
-  - When building the frontend for production set `VITE_API_BASE` to your API base URL (e.g. `https://api.example.com`) so the app points to the correct backend.
-  - The included release workflow pushes images to GitHub Container Registry (GHCR) using the `GITHUB_TOKEN`. If you prefer Docker Hub, add credentials to your repo secrets and update the workflow accordingly.
-  - Health checks are passing (`/health`)
-  - Metrics are available at `/metrics` if you expose them
-  - Keep sensitive secrets out of the image; provide them via your platform's secrets manager
+- When building the frontend for production set `VITE_API_BASE` to your API base URL (e.g. `https://api.example.com`) so the app points to the correct backend.
+- The included release workflow pushes images to GitHub Container Registry (GHCR) using the `GITHUB_TOKEN`. If you prefer Docker Hub, add credentials to your repo secrets and update the workflow accordingly.
+- Health checks are passing (`/health`)
+- Metrics are available at `/metrics` if you expose them
+- Keep sensitive secrets out of the image; provide them via your platform's secrets manager
 
 ## Rollback and backups
+
 - Backup the SQLite DB before migrating or deploying: `cp data.sqlite data.sqlite.bak`
 - Restore from backup if needed and redeploy previous image.
 
@@ -114,8 +116,31 @@ Free-hosting quickstart (Vercel + Fly.io)
 - Backend: use Fly.io with the included `fly.toml`. Create a persistent volume named `data` and set required secrets (e.g., `JWT_SECRET`, `STRIPE_*`, `CORS_ORIGINS`, `DATABASE_PATH=/data/data.sqlite`).
 - CI: two deploy workflows were added: `.github/workflows/deploy-vercel.yml` and `.github/workflows/deploy-fly.yml`. Add `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, and `FLY_API_TOKEN` to your repo secrets to enable auto-deploy on `main`.
 
-
 See `docs/sendgrid.md` for SendGrid template setup.
+
+## Cleanup & Private files
+
+To keep the repo tidy and avoid committing secrets or large artifacts, follow these steps locally before committing:
+
+- Generate one-time secrets (do NOT commit the file):
+
+```bash
+chmod +x scripts/generate-secrets.sh
+./scripts/generate-secrets.sh
+# copy values from .secrets.local into GitHub Secrets and then remove it
+rm .secrets.local
+```
+
+- Remove local artifacts (coverage reports, local DB dumps) before committing:
+
+```bash
+chmod +x scripts/cleanup.sh
+./scripts/cleanup.sh
+```
+
+See `PRIVATE_FILES.md` for a list of files that must not be committed and `SECRETS_TO_SET.md` for exact secret names to configure in GitHub.
+
+See `CONTRIBUTING.md` for contribution guidelines.
 
 Webhooks
 

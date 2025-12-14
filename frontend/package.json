@@ -28,6 +28,8 @@
     "@playwright/test": "^1.43.1"
   },
   "playwright": {
-    "browsers": ["chromium"]
+    "browsers": [
+      "chromium"
+    ]
   }
 }

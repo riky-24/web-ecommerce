@@ -1,0 +1,6 @@
+coverage/
+frontend/dist/
+node_modules/
+frontend/test-results/
+frontend/vite.config.js
+frontend/vitest.config.js

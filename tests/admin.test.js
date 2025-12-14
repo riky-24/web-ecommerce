@@ -1,5 +1,5 @@
 const request = require('supertest');
-const { v4: uuidv4 } = require('uuid');
+// uuid not needed in this test
 
 describe('Admin actions', () => {
   beforeEach(async () => {

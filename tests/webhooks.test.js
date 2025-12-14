@@ -2,7 +2,7 @@ process.env.DATABASE_PATH = ':memory:';
 const request = require('supertest');
 const app = require('../src/app');
 const { createLicense } = require('../src/data/licenses');
-const { getProduct } = require('../src/data/products');
+// getProduct not required in this test
 
 describe('Webhooks', () => {
   test('checkout.session.completed creates order and license', async () => {

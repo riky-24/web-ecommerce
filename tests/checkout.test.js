@@ -31,13 +31,11 @@ describe('Checkout', () => {
       },
     }));
 
-    const res = await request(app)
-      .post('/checkout/create-session')
-      .send({
-        productId: 'some-id',
-        successUrl: 'https://ok',
-        cancelUrl: 'https://cancel',
-      });
+    const res = await request(app).post('/checkout/create-session').send({
+      productId: 'some-id',
+      successUrl: 'https://ok',
+      cancelUrl: 'https://cancel',
+    });
     // product not found; expect 404
     expect(res.statusCode).toBe(404);
   });

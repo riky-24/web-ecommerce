@@ -17,7 +17,11 @@ async function verifyUser({ username, password }) {
   // debug logs can be enabled via DEBUG_AUTH=true in test env
   if (process.env.DEBUG_AUTH === 'true') {
     // eslint-disable-next-line no-console
-    console.log('verifyUser fetched user:', { username: user.username, failedAttempts: user.failedAttempts, lockUntil: user.lockUntil });
+    console.log('verifyUser fetched user:', {
+      username: user.username,
+      failedAttempts: user.failedAttempts,
+      lockUntil: user.lockUntil,
+    });
   }
   const now = Date.now();
   if (user.lockUntil && new Date(user.lockUntil).getTime() > now) {
@@ -37,7 +41,11 @@ async function verifyUser({ username, password }) {
   if (res && res.lockUntil) {
     if (process.env.NODE_ENV === 'test') {
       // eslint-disable-next-line no-console
-      console.log('User locked by system:', { username, attempts: res.attempts, lockUntil: res.lockUntil });
+      console.log('User locked by system:', {
+        username,
+        attempts: res.attempts,
+        lockUntil: res.lockUntil,
+      });
     }
     await db.insertAudit({
       id: uuidv4(),

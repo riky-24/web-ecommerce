@@ -13,4 +13,7 @@ async function run() {
   console.log('user:', u);
 }
 
-run().catch((e) => { console.error(e); process.exit(1); });
+run().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

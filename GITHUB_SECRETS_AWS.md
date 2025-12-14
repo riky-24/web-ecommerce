@@ -8,12 +8,15 @@ If you want the CI/workflows to upload automated backups to an S3 bucket, add th
 - `S3_BUCKET`: bucket name where backups will be stored
 
 Notes:
+
 - The `backup-to-s3` workflow streams the SQLite file from Fly's mounted volume via `flyctl ssh run` and uploads it directly to S3.
 - Configure a lifecycle rule on the S3 bucket to prune old backups and enforce retention.
 - Keep AWS credentials scoped to a dedicated IAM user/role and rotate keys regularly.
 
 Usage:
+
 - The script `scripts/restore-from-s3.sh` can be used locally or in CI to fetch a backup and restore it to `./data/data.sqlite`.
 
 Security:
+
 - Use minimal IAM permissions (PutObject/GetObject/ListBucket if needed) and avoid granting wildcard access.

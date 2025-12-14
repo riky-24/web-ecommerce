@@ -1,7 +1,7 @@
 process.env.DATABASE_PATH = ':memory:';
 const request = require('supertest');
 const app = require('../src/app');
-const { clearProducts } = require('../src/data/products');
+// clearProducts not needed here
 
 let token;
 
