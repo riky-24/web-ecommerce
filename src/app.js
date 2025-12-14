@@ -20,8 +20,8 @@ if (process.env.NODE_ENV !== 'test') {
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
-          scriptSrc: ["'self'", "'unsafe-eval'"],
-          styleSrc: ["'self'", "'unsafe-inline'"],
+          scriptSrc: ["'self'"],
+          styleSrc: ["'self'"],
           imgSrc: ["'self'", 'data:'],
           connectSrc: ["'self'"],
           frameAncestors: ["'none'"],
