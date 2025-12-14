@@ -83,6 +83,24 @@ If you are deploying to a managed Postgres (Supabase), use an appropriate SQL mi
 - Monitor slow endpoints, error rates, and webhook failures.
 - Add additional hardened configuration (WAF, stricter CSP, monitoring dashboards) as traffic grows.
 
+---
+
+## Rollback & Backups (detailed)
+
+- **Immediate rollback:** revert the merge that caused the issue and redeploy the previous image/tag. For Fly, deploy a previous release or the prior image.
+- **Database restore:** if data corruption/loss is suspected, restore from the latest tested backup. The repo contains a GitHub Action (`.github/workflows/backup-to-s3.yml`) that can dump SQLite from the running Fly instance to S3. Ensure `FLY_APP_NAME`, `S3_BUCKET`, and AWS creds are configured as secrets.
+- **Verification:** after rollback or restore, run smoke checks against staging (`/health`, `/`) and run acceptance E2E tests before re-promoting to production.
+
+## Dependency management (detailed)
+
+- The repo temporarily uses `overrides` in `package.json` to pin specific patched transitive dependencies (e.g., `axios`, `semver`) until the lockfile is updated by a dependency PR. These `overrides` may cause `npx npm-check-updates` to fail with `EOVERRIDE` locally.
+- Recommended approach to update dependencies safely:
+  1. Use the `Auto Bump Dependencies` workflow (Actions → Auto Bump Dependencies → Run workflow) so bumps run on an Ubuntu runner and produce a PR with updated lockfile.
+  2. If you must update locally: remove `overrides` temporarily, run `npx npm-check-updates -u && npm install`, commit the updated `package-lock.json`, open a PR, and reinstate or re-evaluate `overrides` after CI passes.
+  3. If CI audit reports high vulnerabilities, address them in the dependency PRs and ensure `npm audit --audit-level=high` passes on merge.
+
+If you want, I can run the Auto Bump workflow for you (from the Actions UI) or open PRs programmatically if you provide a PAT with minimal scope or add a repo secret for automation.
+
 If you'd like, I can help integrate one-click deploy scripts for common providers (DigitalOcean App Platform, Heroku, or Kubernetes manifests) — which provider should I prepare for?
 
 ## Free-hosting Quickstart (Vercel frontend + Fly.io backend)
