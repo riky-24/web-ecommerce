@@ -1,0 +1,11 @@
+groups:
+  - name: microservice.rules
+    rules:
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{job="microservice",status=~"5.."}[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: page
+        annotations:
+          summary: High 5xx error rate for microservice
+          description: 'High rate of 5xx responses detected over the last 5 minutes.'
