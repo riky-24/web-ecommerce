@@ -6,6 +6,12 @@ Required for Fly deploy workflow (.github/workflows/deploy-fly.yml)
 
 - FLY_API_TOKEN: your Fly API token (from fly.io account)
 - JWT_SECRET: strong JWT signing secret
+- QRIS_PROVIDER: (optional) provider id for QRIS integration (e.g., xendit or midtrans)
+- XENDIT_API_KEY: (required if using `xendit`) API key for Xendit (secret)
+- XENDIT_CREATE_QR_URL: (optional) custom create QR endpoint for Xendit (defaults to Xendit public API)
+- XENDIT_GET_STATUS_URL: (optional) status endpoint template (use `{id}` placeholder)
+- MIDTRANS_SERVER_KEY: (required if using `midtrans`) server key for Midtrans (secret)
+- QRIS_CALLBACK_URL: (optional) full callback URL for provider webhooks (defaults to `APP_BASE_URL/checkout/qris-callback` if `APP_BASE_URL` is set)
 - STRIPE_SECRET_KEY: Stripe secret key (if using Stripe)
 - STRIPE_WEBHOOK_SECRET: Stripe webhook signing secret
 - CORS_ORIGINS: comma-separated origins (e.g. https://your-frontend.vercel.app)
@@ -26,3 +32,25 @@ Notes
 
 - Keep secrets scoped to the repository and avoid exposing them in logs.
 - You can set additional runtime env variables on Fly (via `flyctl secrets set`) or via the Fly web UI.
+
+How to generate `JWT_SECRET` (copy-paste):
+
+- Linux / macOS / WSL (OpenSSL):
+
+  ```bash
+  openssl rand -hex 64
+  ```
+
+- Node (cross-platform):
+
+  ```bash
+  node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+  ```
+
+- Windows PowerShell (single line):
+
+  ```powershell
+  powershell -Command "$b=New-Object 'System.Byte[]' 64; (New-Object System.Security.Cryptography.RNGCryptoServiceProvider).GetBytes($b); [System.BitConverter]::ToString($b).Replace('-','').ToLower()"
+  ```
+
+Copy the generated hex string exactly (no quotes/spaces) and paste it into the GitHub secret value field for `JWT_SECRET`.

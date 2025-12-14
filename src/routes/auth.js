@@ -18,7 +18,8 @@ router.post(
       const user = await createUser({ username, password });
       return res.status(201).json(user);
     } catch (e) {
-      return res.status(409).json({ error: e.message });
+      // avoid leaking details (e.g., "username exists") to clients
+      return res.status(409).json({ error: 'registration failed' });
     }
   }
 );
@@ -29,8 +30,9 @@ router.post(
   body('password').isString().isLength({ min: 6 }),
   async (req, res) => {
     const errors = validationResult(req);
+    // For login, avoid leaking validation details — respond with generic 401
     if (!errors.isEmpty())
-      return res.status(400).json({ errors: errors.array() });
+      return res.status(401).json({ error: 'invalid credentials' });
     const { username, password } = req.body || {};
     const ok = await verifyUser({ username, password });
     if (ok && ok.locked) {

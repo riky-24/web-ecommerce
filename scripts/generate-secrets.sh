@@ -8,7 +8,20 @@ OUT_FILE=.secrets.local
 : > "$OUT_FILE"
 
 echo "Generating secrets..."
-JWT_SECRET=$(node -e "console.log(require('crypto').randomBytes(64).toString('hex'))")
+# Prefer OpenSSL if available, then Node; otherwise print an error with a copy-paste PowerShell fallback.
+if command -v openssl >/dev/null 2>&1; then
+	JWT_SECRET=$(openssl rand -hex 64)
+elif command -v node >/dev/null 2>&1; then
+	JWT_SECRET=$(node -e "console.log(require('crypto').randomBytes(64).toString('hex'))")
+else
+	echo "Error: neither 'openssl' nor 'node' found."
+	echo "On Windows (PowerShell) you can run the following to generate a 64-byte hex secret and paste it into the GitHub UI:"
+	echo
+	echo "  powershell -Command \"$b=New-Object 'System.Byte[]' 64; (New-Object System.Security.Cryptography.RNGCryptoServiceProvider).GetBytes($b); [System.BitConverter]::ToString($b).Replace('-','').ToLower()\""
+	echo
+	echo "Or install Node or OpenSSL and re-run this script."
+	exit 1
+fi
 # Placeholder strings for Stripe webhook (must be copied from Stripe dashboard)
 STRIPE_SECRET_KEY="<paste from Stripe>"
 STRIPE_WEBHOOK_SECRET="<paste from Stripe Webhooks>"

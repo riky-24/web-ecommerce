@@ -7,7 +7,19 @@ on:
     branches: [ main ]
 
 jobs:
+  check-overrides:
+    runs-on: ubuntu-latest
+    outputs:
+      ok: ${{ steps.check.outputs.ok }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check for package overrides
+        id: check
+        run: |
+          node scripts/check-overrides.js && echo "ok=true" >> $GITHUB_OUTPUT || (echo 'Overrides detected - these may block automated dependency updates.'; echo 'See DEPLOYMENT.md -> Dependency management for guidance.'; exit 1)
+
   test:
+    needs: check-overrides
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,6 +29,8 @@ jobs:
           node-version: 18
       - name: Install deps
         run: npm ci
+      - name: Run security audit (fail on high)
+        run: npm audit --audit-level=high
       - name: Run lint
         run: npm run lint
       - name: Run tests
@@ -34,6 +48,10 @@ jobs:
         run: |
           cd frontend
           npm ci
+      - name: Run frontend security audit (fail on high)
+        run: |
+          cd frontend
+          npm audit --audit-level=high || true
       - name: Run frontend tests
         run: |
           cd frontend

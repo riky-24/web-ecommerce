@@ -41,6 +41,8 @@ try {
       amount REAL,
       currency TEXT,
       stripeSessionId TEXT,
+      paymentMethod TEXT,
+      paymentId TEXT,
       status TEXT,
       createdAt TEXT
     );
@@ -58,6 +60,15 @@ try {
       action TEXT,
       target TEXT,
       details TEXT,
+      createdAt TEXT
+    );
+    CREATE TABLE IF NOT EXISTS coupons (
+      id TEXT PRIMARY KEY,
+      code TEXT NOT NULL,
+      percentOff REAL,
+      amountOff REAL,
+      stripeId TEXT,
+      active INTEGER DEFAULT 1,
       createdAt TEXT
     );
   `);
@@ -100,6 +111,14 @@ try {
       sqliteDb.prepare('ALTER TABLE products ADD COLUMN stripeId TEXT').run();
     if (!cols.includes('updatedAt'))
       sqliteDb.prepare('ALTER TABLE products ADD COLUMN updatedAt TEXT').run();
+    if (!cols.includes('category'))
+      sqliteDb
+        .prepare(
+          "ALTER TABLE products ADD COLUMN category TEXT DEFAULT 'general'"
+        )
+        .run();
+    if (!cols.includes('qrisId'))
+      sqliteDb.prepare('ALTER TABLE products ADD COLUMN qrisId TEXT').run();
   } catch (e) {
     // ignore
   }
@@ -306,7 +325,7 @@ async function insertProduct(product) {
   if (mode === 'sqlite') {
     return sqliteDb
       .prepare(
-        'INSERT INTO products (id, name, price, description, currency, license, type, interval, stripeId, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        'INSERT INTO products (id, name, price, description, currency, license, type, interval, stripeId, category, qrisId, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
       )
       .run(
         product.id,
@@ -318,6 +337,8 @@ async function insertProduct(product) {
         product.type || 'one-time',
         product.interval || null,
         product.stripeId || null,
+        product.category || 'general',
+        product.qrisId || null,
         product.createdAt,
         product.updatedAt || null
       );
@@ -351,10 +372,13 @@ async function updateProductById(id, attrs) {
       attrs.interval != null ? attrs.interval : existing.interval;
     const stripeId =
       attrs.stripeId != null ? attrs.stripeId : existing.stripeId;
+    const category = attrs.category || existing.category || 'general';
+    const qrisId =
+      attrs.qrisId != null ? attrs.qrisId : existing.qrisId || null;
     const updatedAt = new Date().toISOString();
     sqliteDb
       .prepare(
-        'UPDATE products SET name = ?, price = ?, description = ?, currency = ?, license = ?, type = ?, interval = ?, stripeId = ?, updatedAt = ? WHERE id = ?'
+        'UPDATE products SET name = ?, price = ?, description = ?, currency = ?, license = ?, type = ?, interval = ?, stripeId = ?, category = ?, qrisId = ?, updatedAt = ? WHERE id = ?'
       )
       .run(
         name,
@@ -365,6 +389,8 @@ async function updateProductById(id, attrs) {
         type,
         interval,
         stripeId,
+        category,
+        qrisId,
         updatedAt,
         id
       );
@@ -414,7 +440,7 @@ module.exports = {
     if (mode === 'sqlite')
       return sqliteDb
         .prepare(
-          'INSERT INTO orders (id, productId, username, amount, currency, stripeSessionId, status, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+          'INSERT INTO orders (id, productId, username, amount, currency, stripeSessionId, paymentMethod, paymentId, status, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         )
         .run(
           order.id,
@@ -423,6 +449,8 @@ module.exports = {
           order.amount,
           order.currency,
           order.stripeSessionId,
+          order.paymentMethod || null,
+          order.paymentId || null,
           order.status,
           order.createdAt
         );
@@ -449,6 +477,38 @@ module.exports = {
   updateProductById,
   deleteProductById,
   deleteAllProducts,
+  // coupons
+  insertCoupon: async (c) => {
+    if (mode === 'sqlite')
+      return sqliteDb
+        .prepare(
+          'INSERT INTO coupons (id, code, percentOff, amountOff, stripeId, active, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)'
+        )
+        .run(
+          c.id,
+          c.code,
+          c.percentOff,
+          c.amountOff,
+          c.stripeId || null,
+          c.active ? 1 : 0,
+          c.createdAt
+        );
+    const data = await low.load();
+    data.coupons = data.coupons || [];
+    data.coupons.push(c);
+    await low.save(data);
+  },
+  getCouponByCode: async (code) => {
+    if (mode === 'sqlite')
+      return sqliteDb.prepare('SELECT * FROM coupons WHERE code = ?').get(code);
+    const data = await low.load();
+    return (data.coupons || []).find((c) => c.code === code) || null;
+  },
+  listCoupons: async () => {
+    if (mode === 'sqlite') return sqliteDb.prepare('SELECT * FROM coupons').all();
+    const data = await low.load();
+    return data.coupons || [];
+  },
   // licenses
   insertLicense: async (lic) => {
     if (mode === 'sqlite')
@@ -525,6 +585,20 @@ module.exports = {
         .all();
     const data = await low.load();
     return data.audit || [];
+  },
+  updateOrderStatus: async (id, status) => {
+    if (mode === 'sqlite') {
+      sqliteDb
+        .prepare('UPDATE orders SET status = ? WHERE id = ?')
+        .run(status, id);
+      return sqliteDb.prepare('SELECT * FROM orders WHERE id = ?').get(id);
+    }
+    const data = await low.load();
+    const idx = (data.orders || []).findIndex((o) => o.id === id);
+    if (idx === -1) return null;
+    data.orders[idx].status = status;
+    await low.save(data);
+    return data.orders[idx];
   },
   // account lockout helpers (exported)
   incrementFailedLogin: async (username, limit, lockMs) => {

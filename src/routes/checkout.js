@@ -5,6 +5,8 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_xxx', {
   apiVersion: '2024-08-19',
 });
 const { getProduct } = require('../data/products');
+const qris = require('../payments/provider');
+const db = require('../db');
 
 // Create a Stripe Checkout session for a product
 router.post('/create-session', async (req, res) => {
@@ -50,6 +52,60 @@ router.post('/create-session', async (req, res) => {
   } catch (e) {
     return res.status(500).json({ error: e.message });
   }
+});
+
+// Create a QRIS payment
+router.post('/create-qris', async (req, res) => {
+  const { productId } = req.body || {};
+  if (!productId) return res.status(400).json({ error: 'productId required' });
+  const product = await getProduct(productId);
+  if (!product) return res.status(404).json({ error: 'product not found' });
+  try {
+    const amount = Number(product.price);
+    const info = await qris.createPayment({
+      product,
+      amount,
+      currency: product.currency,
+    });
+    return res.json({
+      paymentId: info.id,
+      qr: info.qr,
+      paymentUrl: info.paymentUrl,
+      expiresAt: info.expiresAt,
+    });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+// Poll QRIS status
+router.get('/qris-status/:id', async (req, res) => {
+  const id = req.params.id;
+  const order = await db.getOrderById(id);
+  if (!order) return res.status(404).json({ error: 'not found' });
+  return res.json({ status: order.status });
+});
+
+// Provider callback endpoint (used by real providers and dev mock)
+// accept raw body here to allow providers that sign the raw payload
+router.post('/qris-callback', express.raw({ type: '*/*' }), async (req, res) => {
+  // If provider implements a handler, let it process the request
+  if (typeof qris.handleCallback === 'function') {
+    try {
+      const updated = await qris.handleCallback(req);
+      if (!updated) return res.status(404).json({ error: 'payment not found' });
+      return res.json({ status: updated.status });
+    } catch (e) {
+      return res.status(500).json({ error: e.message });
+    }
+  }
+
+  // Fallback for simple body POSTs that include paymentId (legacy/dev)
+  const { paymentId } = req.body || {};
+  if (!paymentId) return res.status(400).json({ error: 'paymentId required' });
+  const updated = await qris.confirmPayment(paymentId);
+  if (!updated) return res.status(404).json({ error: 'payment not found' });
+  return res.json({ status: updated.status });
 });
 
 module.exports = router;

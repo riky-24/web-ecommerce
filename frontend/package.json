@@ -13,19 +13,19 @@
     "e2e": "playwright test"
   },
   "dependencies": {
-    "react": "18.2.0",
-    "react-dom": "18.2.0"
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
   },
   "devDependencies": {
-    "vite": "^5.0.0",
-    "vitest": "^0.34.5",
-    "@testing-library/react": "^14.0.0",
-    "@testing-library/jest-dom": "^6.0.0",
-    "jsdom": "^22.1.0",
-    "eslint": "^8.48.0",
-    "eslint-plugin-react": "^7.32.2",
-    "@vitejs/plugin-react": "^4.0.0",
-    "@playwright/test": "^1.43.1"
+    "vite": "^7.2.7",
+    "vitest": "^4.0.15",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "jsdom": "^27.3.0",
+    "eslint": "^9.39.2",
+    "eslint-plugin-react": "^7.37.5",
+    "@vitejs/plugin-react": "^5.1.2",
+    "@playwright/test": "^1.57.0"
   },
   "playwright": {
     "browsers": [

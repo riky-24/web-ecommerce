@@ -18,6 +18,8 @@ async function createProduct({
   type,
   interval,
   stripeId,
+  category,
+  qrisId,
 }) {
   const id = uuidv4();
   const createdAt = new Date().toISOString();
@@ -31,6 +33,8 @@ async function createProduct({
     type: type || 'one-time',
     interval: interval || null,
     stripeId: stripeId || null,
+    category: category || 'general',
+    qrisId: qrisId || null,
     createdAt,
   };
   await db.insertProduct(p);
