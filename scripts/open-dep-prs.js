@@ -18,18 +18,36 @@ const branch = `deps/manual-bump-${timestamp}`;
 
 try {
   // update root
-  run('npx npm-check-updates -u');
+  try {
+    run('npx npm-check-updates -u');
+  } catch (e) {
+    // try again rejecting packages that are pinned/overridden
+    console.warn('ncu failed, retrying excluding pinned packages');
+    run('npx npm-check-updates -u --reject axios,semver,simple-update-notifier');
+  }
   // update frontend
-  run('npx npm-check-updates -u', { cwd: 'frontend' });
+  try {
+    run('npx npm-check-updates -u', { cwd: 'frontend' });
+  } catch (e) {
+    console.warn('ncu failed in frontend, retrying excluding pinned packages');
+    run('npx npm-check-updates -u --reject axios,semver,simple-update-notifier', {
+      cwd: 'frontend',
+    });
+  }
 
   // install to update lockfiles
   run('npm install --no-audit --no-fund');
   run('npm install --no-audit --no-fund', { cwd: 'frontend' });
 
-  // create branch and commit
+  // create branch and commit only if there are changes
   run(`git checkout -b ${branch}`);
   run('git add package.json package-lock.json frontend/package.json frontend/package-lock.json');
-  run(`git commit -m "chore(deps): manual bump via open-dep-prs script" || echo "No changes to commit")`);
+  const staged = execSync('git diff --staged --name-only').toString().trim();
+  if (!staged) {
+    console.log('No dependency changes to commit');
+    process.exit(0);
+  }
+  run('git commit -m "chore(deps): manual bump via open-dep-prs script"');
   run(`git push -u origin ${branch}`);
 
   // create PR using GitHub API
