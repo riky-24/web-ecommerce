@@ -45,6 +45,8 @@ Secrets to add in the GitHub UI (exact names):
 - `STRIPE_SECRET_KEY` — Stripe secret key (live or test)
 - `STRIPE_WEBHOOK_SECRET` — Stripe webhook signing secret (from Stripe Dashboard > Webhooks)
 - `CORS_ORIGINS` — comma-separated allowed origins (e.g. `https://your-frontend.vercel.app`)
+- `XENDIT_API_KEY` — API key for Xendit (required if `QRIS_PROVIDER=xendit`)
+- `MIDTRANS_SERVER_KEY` — server key for Midtrans (required if `QRIS_PROVIDER=midtrans`)
 - `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` — for Vercel deployments
 
 Optional for backups / monitoring:

@@ -1,6 +1,7 @@
 const axios = require('axios');
 const { v4: uuidv4 } = require('uuid');
 const db = require('../../db');
+const crypto = require('crypto');
 
 const API_BASE = process.env.XENDIT_API_BASE || 'https://api.xendit.co';
 const CREATE_URL = process.env.XENDIT_CREATE_QR_URL || `${API_BASE}/qr_codes`;
@@ -73,6 +74,21 @@ async function confirmPayment(paymentId) {
 }
 
 async function handleCallback(req) {
+  // Verify signature/token if configured
+  const secret = process.env.XENDIT_WEBHOOK_SECRET || process.env.XENDIT_CALLBACK_TOKEN || null;
+  if (secret) {
+    // prefer simple callback token header
+    const token = req.headers['x-callback-token'];
+    if (token) {
+      if (token !== secret) throw new Error('invalid callback token');
+    } else if (req.headers['x-signature']) {
+      // compute HMAC-SHA256 of raw body
+      const raw = Buffer.isBuffer(req.body) ? req.body : Buffer.from(JSON.stringify(req.body || {}));
+      const sig = crypto.createHmac('sha256', secret).update(raw).digest('hex');
+      if (sig !== req.headers['x-signature']) throw new Error('invalid signature');
+    }
+  }
+
   // Generic callback handler: try to extract a provider payment id and mark paid
   const body = req.body || {};
   const paymentId = body.external_id || body.payment_id || body.qr_id || body.id || body.reference;

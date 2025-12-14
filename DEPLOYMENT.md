@@ -52,6 +52,18 @@ Security:
 - Prefer verifying provider webhooks with a signature secret when the provider exposes one. This service exposes `QRIS_CALLBACK_URL` and will attempt to call provider-specific `handleCallback` implementations to map incoming webhook payloads to `paymentId`.
 - Ensure your provider's callback endpoint is reachable from the public internet (use a staging domain or an SSH tunnel for testing).
 
+Local testing tip
+
+- You can simulate provider webhooks locally (for Xendit/Midtrans) by POSTing a minimal payload to the callback endpoint:
+
+```bash
+curl -X POST http://localhost:3000/checkout/qris-callback \
+  -H "Content-Type: application/json" \
+  -d '{"external_id":"<YOUR_PAYMENT_ID>"}'
+```
+
+- If your provider signs webhook payloads, add the expected header (e.g. `X-CALLBACK-SIGNATURE`) when testing locally to exercise signature verification logic if you implement it.
+
 Run migrations before starting the service in production:
 
 ```bash

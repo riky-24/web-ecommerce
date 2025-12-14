@@ -1,0 +1,43 @@
+name: Auto Bump Dependencies
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: '0 3 * * 1' # weekly on Monday at 03:00 UTC
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install deps
+        run: npm ci
+      - name: Install npm-check-updates
+        run: npm i -g npm-check-updates@16
+      - name: Bump root dependencies
+        run: |
+          ncu -u
+          npm install --no-audit --no-fund
+      - name: Bump frontend dependencies
+        working-directory: frontend
+        run: |
+          ncu -u
+          npm install --no-audit --no-fund
+      - name: Run tests
+        run: npm test --silent -- -i
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: chore(deps): bump dependencies
+          branch: deps/auto-bump-${{ github.run_id }}
+          title: chore(deps): auto bump dependencies
+          labels: dependencies, automated
+          body: |
+            This PR was created automatically by the Auto Bump Dependencies workflow.
+            It updates the `package.json` and `package-lock.json` files and runs the test suite.
+            Please review and merge if CI passes.

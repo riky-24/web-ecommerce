@@ -87,7 +87,8 @@ router.get('/qris-status/:id', async (req, res) => {
 });
 
 // Provider callback endpoint (used by real providers and dev mock)
-router.post('/qris-callback', async (req, res) => {
+// accept raw body here to allow providers that sign the raw payload
+router.post('/qris-callback', express.raw({ type: '*/*' }), async (req, res) => {
   // If provider implements a handler, let it process the request
   if (typeof qris.handleCallback === 'function') {
     try {

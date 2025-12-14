@@ -29,8 +29,9 @@ router.post(
   body('password').isString().isLength({ min: 6 }),
   async (req, res) => {
     const errors = validationResult(req);
+    // For login, avoid leaking validation details — respond with generic 401
     if (!errors.isEmpty())
-      return res.status(400).json({ errors: errors.array() });
+      return res.status(401).json({ error: 'invalid credentials' });
     const { username, password } = req.body || {};
     const ok = await verifyUser({ username, password });
     if (ok && ok.locked) {

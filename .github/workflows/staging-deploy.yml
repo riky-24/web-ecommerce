@@ -1,0 +1,48 @@
+name: Staging Deploy
+
+on:
+  push:
+    branches:
+      - staging
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - run: npm ci
+      - run: npm test --silent -- -i
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/staging'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy to Fly (if configured)
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          if [ -z "${FLY_API_TOKEN}" ]; then
+            echo "FLY_API_TOKEN not set, skipping deploy";
+            exit 0;
+          fi
+          flyctl deploy --config fly.toml
+
+  smoke-test:
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/staging'
+    steps:
+      - name: Smoke test
+        run: |
+          if [ -z "${{ env.STAGING_URL }}" ]; then
+            echo "No STAGING_URL set, skipping smoke tests";
+            exit 0;
+          fi
+          curl -fsS "${{ env.STAGING_URL }}/health" || exit 1
+          curl -fsS "${{ env.STAGING_URL }}/" || exit 1

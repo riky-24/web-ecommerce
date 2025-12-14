@@ -1,6 +1,7 @@
 const axios = require('axios');
 const { v4: uuidv4 } = require('uuid');
 const db = require('../../db');
+const crypto = require('crypto');
 
 const API_BASE = process.env.MIDTRANS_API_BASE || 'https://api.midtrans.com/v2';
 const CREATE_URL = process.env.MIDTRANS_CREATE_QR_URL || `${API_BASE}/charge`;
@@ -67,6 +68,22 @@ async function confirmPayment(paymentId) {
 
 async function handleCallback(req) {
   const body = req.body || {};
+  const serverKey = process.env.MIDTRANS_SERVER_KEY;
+  if (serverKey) {
+    // Midtrans may send signature_key either in body or via header 'x-midtrans-signature'
+    const headerSig = req.headers['x-midtrans-signature'];
+    const orderId = body.order_id || body.transaction_id || body.order_id;
+    const statusCode = String(body.status_code || body.transaction_status || '');
+    const gross = String(body.gross_amount || body.gross_amount || body.amount || '');
+    const payload = `${orderId}${statusCode}${gross}${serverKey}`;
+    const hashed = crypto.createHash('sha512').update(payload).digest('hex');
+    if (headerSig) {
+      if (headerSig !== hashed) throw new Error('invalid signature');
+    } else if (body.signature_key) {
+      if (body.signature_key !== hashed) throw new Error('invalid signature');
+    }
+  }
+
   const paymentId = body.order_id || body.transaction_id || body.external_id;
   if (!paymentId) return null;
   const updated = await db.updateOrderStatus(paymentId, 'paid');
